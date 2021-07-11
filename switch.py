@@ -1,4 +1,4 @@
-import sys, yaml
+import sys, yaml, json
 from systemd import journal
 import logging
 import wyze_sdk
@@ -16,9 +16,11 @@ log.info("Finished configuring logger.")
 # Open a connection to the Wyze API with values loaded from config file.
 log.info("Loading configuration.")
 configuration = yaml.load(open('config', 'r'), Loader=yaml.Loader)
+wconf = configuration['wyze']
+mconf = configuration['mqtt']
 log.info("Configuration loaded.")
 log.info("Connected to Wyze API and retrieving devices..")
-wyze_client = wyze_sdk.Client(email=configuration['wyze']['email'], password=configuration['wyze']['password'])
+wyze_client = wyze_sdk.Client(email=wconf['email'], password=wconf['password'])
 wyze_devices = wyze_client.devices_list()
 log.info("Device list retrieved.")
 
@@ -30,7 +32,7 @@ def find_device(device_nick):
     log.debug("Searching for device {}".format(device_nick))
     try:
         for device in wyze_devices:
-            if device.nickname == sys.argv[2]:
+            if device.nickname == device_nick:
                 plug = wyze_client.plugs.info(device_mac=device.mac)
                 log.debug("Found device {}".format(device_nick))
                 return plug
@@ -79,6 +81,38 @@ if sys.argv[1] in ('--on', '--off', '--toggle') and sys.argv[2]:
         turn_off(plug)
     elif sys.argv[1] == "--toggle":
         toggle(plug)
+elif sys.argv[1] in ("--daemon", "--server"):
+    log.info("Switch started in daemon mode. Press Ctrl-C to exit.")
+    import paho.mqtt.client as mqtt
+    
+    def on_connect(client, userdata, flags, rc):
+        log.info("Connected to MQTT broker with result: {}".format(str(rc)))
+        client.subscribe(mconf['topic'])
+
+    def on_message(client, userdata, msg):
+        message = str(msg.payload.decode('utf-8'))
+        command = json.loads(message)
+        log.info("Processing message from MQTT: [{}] {}".format(str(msg.topic), message))
+        plug = find_device(command['name'])
+        if command['command'] == "on":
+            turn_on(plug)
+        elif command['command'] == "off":
+            turn_off(plug)
+        elif command['command'] == "toggle":
+            toggle(plug)
+        log.info("Message processing complete.")
+    
+    mqtt_client = mqtt.Client()
+    mqtt_client.on_connect = on_connect
+    mqtt_client.on_message = on_message
+
+    mqtt_client.username_pw_set(mconf['user'], password=mconf['password'])
+    mqtt_client.connect(mconf['server'], mconf['port'], 60)
+    try:
+        mqtt_client.loop_forever()
+    except KeyboardInterrupt:
+        pass
 else:
     raise Exception("Invalid option.")
+
 log.info("Execution complete.")

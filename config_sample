@@ -1,3 +1,9 @@
 wyze:
   email: config@sample
   password: 1234
+mqtt:
+  server: 127.0.0.1
+  port: 1883
+  user: user
+  password: password
+  topic: topic
