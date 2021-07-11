@@ -4,7 +4,7 @@ chardet==4.0.0
 idna==2.10
 mintotp==0.3.0
 protobuf==3.10.0
-PyYAML==5.4.1
+python-systemd==0.0.9
 requests==2.25.1
 six==1.16.0
 urllib3==1.26.6
