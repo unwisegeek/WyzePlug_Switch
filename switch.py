@@ -74,7 +74,7 @@ def toggle(plug):
 
 if sys.argv[1] in ('--on', '--off', '--toggle') and sys.argv[2]:
     log.info("Switch started in on-demand mode.")
-    plug = find_device(sys.argv[1])
+    plug = find_device(sys.argv[2])
     if sys.argv[1] == "--on":
         turn_on(plug)
     elif sys.argv[1] == "--off":
