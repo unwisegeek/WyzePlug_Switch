@@ -242,7 +242,13 @@ if __name__ == "__main__":
             message = str(msg.payload.decode('utf-8'))
             command = json.loads(message)
             log.info("Processing message from MQTT: [{}] {}".format(str(msg.topic), message))
-            service = which_service(command['name'])
+            if cached_devices:
+                rw = load_devices('wyze')
+                rs = load_devices('switchbot')
+            else:
+                rw = wyze_find_device("", listdevices=True)
+                rs = switchbot_find_device("", listdevices=True)
+            service = which_service(command['name'], rw, rs)
             if service == "wyze":
                 device = wyze_find_device(command['name'])
                 if command['command'] == "on":
