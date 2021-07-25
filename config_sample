@@ -1,9 +1,12 @@
 wyze:
   email: config@sample
   password: 1234
+  totp_key: ABCDEFG
 mqtt:
   server: 127.0.0.1
   port: 1883
   user: user
   password: password
   topic: topic
+switchbot:
+  token: 1234567890
