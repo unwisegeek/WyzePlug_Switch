@@ -251,7 +251,7 @@ if __name__ == "__main__":
                     wyze_turn_off(device)
                 elif command['command'] == "toggle":
                     wyze_toggle(device)
-            if service == "switchbot":
+            elif service == "switchbot":
                 device = switchbot_find_device(command['name'])
                 if command['command'] == "on":
                     device.on()
@@ -261,6 +261,8 @@ if __name__ == "__main__":
                     device.open()
                 if command['command'] == "close":
                     device.close()
+            else:
+                log.info(f"Unable to find service of device {command['name']} with command {command['command']}. Discarding message.")
             log.info("Message processing complete.")
         
         mqtt_client = mqtt.Client()
